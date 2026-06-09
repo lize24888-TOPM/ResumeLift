@@ -1,0 +1,14 @@
+.env
+*.pyc
+__pycache__/
+xhs_images/
+corpus_cache/
+*.docx
+*.md
+!README.md
+filtered_questions.json
+niuke_raw.json
+ocr_text.json
+xhs_raw.json
+answered_questions.json
+debug_niuke.html

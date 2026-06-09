@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeLift - 面经提取</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif;background:#f8f9fb;color:#1e293b;min-height:100vh}
+.header{background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;padding:24px 32px}
+.header h1{font-size:1.5rem;font-weight:600}
+.container{max-width:780px;margin:0 auto;padding:24px}
+.card{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h3{font-size:1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+input,select{width:100%;padding:12px 16px;border:1px solid #e2e8f0;border-radius:12px;font-size:.95rem;outline:none;transition:border-color .2s;margin-bottom:12px}
+input:focus,select:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.1)}
+.row{display:flex;gap:12px}
+.row>*{flex:1}
+.btn{padding:12px 24px;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-primary:hover{background:#4f46e5;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-secondary{background:#fff;color:#475569;border:1px solid #e2e8f0}
+.btn-secondary:hover{background:#f8fafc}
+.q-item{padding:16px 0;border-bottom:1px solid #f1f5f9}
+.q-item:last-child{border-bottom:none}
+.q-num{display:inline-block;background:#eef2ff;color:#4f46e5;width:28px;height:28px;border-radius:8px;text-align:center;line-height:28px;font-size:.85rem;font-weight:700;margin-right:8px}
+.q-text{font-size:1rem;font-weight:500;margin-bottom:6px}
+.q-meta{font-size:.8rem;color:#94a3b8}
+.source-tag{padding:2px 8px;border-radius:6px;font-size:.75rem;font-weight:600;margin-right:8px}
+.source-niuke{background:#ecfdf5;color:#059669}
+.source-xhs{background:#fdf2f8;color:#db2777}
+.status{padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:.9rem}
+.status-info{background:#eef2ff;color:#4f46e5}
+.status-error{background:#fef2f2;color:#dc2626}
+.status-success{background:#ecfdf5;color:#059669}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps{display:flex;justify-content:center;gap:8px;margin-bottom:24px;font-size:.85rem;color:#94a3b8}
+.step{padding:6px 16px;border-radius:20px;background:#f1f5f9}
+.step.active{background:#6366f1;color:#fff}
+.features{display:flex;gap:16px;margin-top:32px;flex-wrap:wrap}
+.feature-card{flex:1;min-width:140px;background:#fff;border-radius:12px;padding:16px;text-align:center;border:1px solid #f1f5f9}
+.feature-card .icon{font-size:1.5rem;margin-bottom:8px}
+.feature-card .title{font-size:.85rem;font-weight:600;margin-bottom:4px}
+.feature-card .desc{font-size:.75rem;color:#94a3b8}
+.feature-card.disabled{opacity:.4}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>ResumeLift - 面经提取机</h1>
+</div>
+
+<div class="container">
+  <div class="steps" id="steps">
+    <span class="step active" id="step1">1. 输入信息</span>
+    <span class="step" id="step2">2. 提取面经</span>
+    <span class="step" id="step3">3. 查看结果</span>
+  </div>
+
+  <!-- 输入区 -->
+  <div id="inputArea">
+    <div class="card">
+      <h3>目标岗位</h3>
+      <div class="row">
+        <input type="text" id="company" placeholder="公司名称 (如: 蚂蚁集团)" value="蚂蚁集团">
+      </div>
+      <div class="row">
+        <input type="text" id="position" placeholder="岗位名称 (如: 商业产品经理)" value="商业产品经理">
+        <select id="stage">
+          <option value="一面">一面 (简历/项目面)</option>
+          <option value="二面">二面 (技术/深度面)</option>
+          <option value="三面">三面 (主管/综合面)</option>
+          <option value="HR面">HR面</option>
+          <option value="业务面" selected>业务面</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="extract()" id="extractBtn" style="width:100%;justify-content:center;padding:16px;font-size:1.1rem">
+      开始提取面经 →
+    </button>
+  </div>
+
+  <!-- 结果区 -->
+  <div id="resultArea" style="display:none">
+    <div id="status"></div>
+    <div id="questions"></div>
+    <div style="display:flex;gap:12px;margin-top:16px">
+      <button class="btn btn-secondary" onclick="reset()" style="flex:1">重新搜索</button>
+      <button class="btn btn-primary" onclick="exportWord()" id="exportBtn" style="flex:1">导出 Word</button>
+    </div>
+  </div>
+
+  <!-- 功能模块 -->
+  <div class="features">
+    <div class="feature-card" style="border-color:#dbeafe;background:#eff6ff">
+      <div class="icon">📋</div>
+      <div class="title">面经提取</div>
+      <div class="desc">牛客+小红书双源</div>
+    </div>
+    <div class="feature-card disabled">
+      <div class="icon">📝</div>
+      <div class="title">面试复盘</div>
+      <div class="desc">开发中</div>
+    </div>
+    <div class="feature-card disabled">
+      <div class="icon">💬</div>
+      <div class="title">自我介绍</div>
+      <div class="desc">开发中</div>
+    </div>
+    <div class="feature-card disabled">
+      <div class="icon">📊</div>
+      <div class="title">会员中心</div>
+      <div class="desc">开发中</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+
+async function extract() {
+  const company = document.getElementById('company').value.trim();
+  const position = document.getElementById('position').value.trim();
+  const stage = document.getElementById('stage').value;
+  if (!position) return alert('请输入岗位名称');
+
+  document.getElementById('extractBtn').disabled = true;
+  document.getElementById('extractBtn').innerHTML = '<span class="spinner"></span> 提取中...';
+  document.getElementById('resultArea').style.display = 'block';
+  document.getElementById('status').innerHTML = '<div class="status status-info">正在从牛客+小红书提取面经...</div>';
+  document.getElementById('step2').classList.add('active');
+
+  try {
+    const resp = await fetch(`${API}/api/extract`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({company, position, stage})
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error);
+
+    const qs = data.questions || [];
+    document.getElementById('step2').classList.remove('active');
+    document.getElementById('step3').classList.add('active');
+    document.getElementById('status').innerHTML = `<div class="status status-success">提取完成: ${qs.length} 题 (牛客+小红书)</div>`;
+
+    let html = '';
+    qs.forEach((q, i) => {
+      const src = q.source || '牛客';
+      html += `<div class="q-item">
+        <div class="q-text"><span class="q-num">${i+1}</span>${q.question}</div>
+        <div class="q-meta"><span class="source-tag ${src==='小红书'?'source-xhs':'source-niuke'}">${src}</span></div>
+      </div>`;
+    });
+    document.getElementById('questions').innerHTML = html;
+    document.getElementById('inputArea').style.display = 'none';
+
+  } catch(e) {
+    document.getElementById('status').innerHTML = `<div class="status status-error">提取失败: ${e.message}<br><small>请确认后端已启动: python skills/api_server.py</small></div>`;
+  } finally {
+    document.getElementById('extractBtn').disabled = false;
+    document.getElementById('extractBtn').innerHTML = '开始提取面经 →';
+  }
+}
+
+async function exportWord() {
+  const btn = document.getElementById('exportBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 导出中...';
+  try {
+    const resp = await fetch(`${API}/api/extract/export`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({questions: [], resume_text: '', jd_text: ''})
+    });
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = '面试备考包.docx'; a.click();
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    alert('导出失败: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '导出 Word';
+  }
+}
+
+function reset() {
+  document.getElementById('inputArea').style.display = 'block';
+  document.getElementById('resultArea').style.display = 'none';
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step3').classList.remove('active');
+}
+</script>
+</body>
+</html>
